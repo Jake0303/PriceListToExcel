@@ -9,19 +9,24 @@ namespace PriceListToExcel
 {
     class Program
     {
-        private static string xmlFile = "IWE OFDACatalog.xml";
-        private static string excelfile = "IWE-DATABASE-AUGUST-2016-v1";
+        private static string xmlFile = "IWE OFDACatalog.XML";
+        private static string excelfile = "IWE-DATABASE-AUGUST-2016-v1.xlsx";
 
         //This struct will hold the <Product> node info
         public struct ProductData
         {
-            public ProductData(string code, string description, string price, string features)
+            public ProductData(string code, string description, string price, string features, string volume, string weight, string width, string height, string depth)
                 : this()
             {
                 CodeData = code;
                 DescriptionData = description;
                 PriceData = price;
                 FeatureData = features;
+                VolumeData = volume;
+                WeightData = weight;
+                HeightData = height;
+                WidthData = width;
+                DepthData = depth;
             }
 
             public string CodeData { get; private set; }
@@ -31,6 +36,16 @@ namespace PriceListToExcel
             public string PriceData { get; private set; }
 
             public string FeatureData { get; private set; }
+
+            public string VolumeData { get; private set; }
+
+            public string WidthData { get; private set; }
+
+            public string WeightData { get; private set; }
+
+            public string HeightData { get; private set; }
+
+            public string DepthData { get; private set; }
 
         }
 
@@ -70,7 +85,7 @@ namespace PriceListToExcel
         //Get Product info from xml file and store it into a list
         private static void GetProductInfo()
         {
-            string code = "", description = "", feature = "", price = "";
+            string code = "", description = "", feature = "", price = "", volume = "",width = "",height = "",weight = "",depth = "";
             int i = 0, f = 0;
             using (XmlReader oldCatReader = XmlReader.Create(xmlFile))
             {
@@ -110,6 +125,27 @@ namespace PriceListToExcel
                                         }
                                     }
                                 }
+                                if(subtree.Name == "Measurement")
+                                {
+                                    switch(subtree.GetAttribute("Type"))
+                                    {
+                                        case "volume":
+                                            volume = subtree.ReadElementContentAsString();
+                                            break;
+                                        case "weight":
+                                            weight = subtree.ReadElementContentAsString();
+                                            break;
+                                        case "width":
+                                            width = subtree.ReadElementContentAsString();
+                                            break;
+                                        case "height":
+                                            height = subtree.ReadElementContentAsString();
+                                            break;
+                                        case "depth":
+                                            depth = subtree.ReadElementContentAsString();
+                                            break;
+                                    }
+                                }
                                 if (subtree.Name == "Features")
                                 {
                                     using (var subtree2 = oldCatReader.ReadSubtree())
@@ -126,7 +162,7 @@ namespace PriceListToExcel
                                     }
                                 }
                             }
-                            prodList.Add(new ProductData(code, description, price, feature));
+                            prodList.Add(new ProductData(code, description, price, feature,volume,weight,width,height,depth));
                         }
                     }
                 }
@@ -220,7 +256,7 @@ namespace PriceListToExcel
         {
             Microsoft.Office.Interop.Excel.Application xlApp = new Microsoft.Office.Interop.Excel.Application();
             xlApp.Visible = true;
-            string workbookPath = (@"D:\Documents\visual studio 2015\Projects\PriceListToExcel\PriceListToExcel\bin\Debug\IWE-DATABASE-AUGUST-2016-v1.xlsx");
+            string workbookPath = (@"C:\Users\Cheryl Amaral\Desktop\PriceListToExcel\PriceListToExcel\bin\Debug\IWE-DATABASE-AUGUST-2016-v1.xlsx");
             Microsoft.Office.Interop.Excel.Workbook wb = xlApp.Workbooks.Open(workbookPath,
                 0, false, 5, "", "", false, Microsoft.Office.Interop.Excel.XlPlatform.xlWindows, "",
                 true, false, 0, true, false, false);
@@ -275,7 +311,6 @@ namespace PriceListToExcel
             string productCell, descriptionCell, listPriceCell;
             int row = 2;
             var rows = ws.get_Range("K1", "HW1");
-            bool priceSet = false;
             string lastDescription = "", lastOptionDescription = "";
 
             foreach (ProductData product in prodList)
